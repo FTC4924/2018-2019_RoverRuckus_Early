@@ -134,7 +134,7 @@ public class RoverHolonomic extends OpMode {
 
         if (hookMovementLeft) {
             //if we want it to collect, we set collectionPower to 1
-            linearServo.setPosition(0);
+            linearServo.setPosition(0.1);
 
         } else if (hookMovementRight) {
             //if we want the collection to deliver/spin backswards, we set collectionPower to -1
@@ -178,10 +178,10 @@ public class RoverHolonomic extends OpMode {
         double backLeftPower =  Range.clip(drive + holonomic + turnRight - turnLeft, -1.0, 1.0);
 
         if (halfSpeed) {
-            frontLeftPower = 0.5 * (frontLeftPower);
-            frontRightPower = 0.5 * (frontRightPower);
-            backRightPower = 0.5 * (backRightPower);
-            backLeftPower = 0.5 * (backLeftPower);
+            frontLeftPower = 0.35 * (frontLeftPower);
+            frontRightPower = 0.35 * (frontRightPower);
+            backRightPower = 0.35 * (backRightPower);
+            backLeftPower = 0.35 * (backLeftPower);
 
         }
 
