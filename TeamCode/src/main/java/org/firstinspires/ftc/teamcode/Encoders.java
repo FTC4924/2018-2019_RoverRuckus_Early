@@ -7,8 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -23,22 +25,29 @@ public class Encoders extends LinearOpMode {
     ColorSensor sensorColorRight;
     ColorSensor sensorColorLeft;
     ColorSensor sensorColorMiddle;
-    DistanceSensor sensorDistanceL;
+   // DistanceSensor sensorDistanceL;
     DistanceSensor sensorDistanceR;
+    TouchSensor limitSwitch;
     Servo rightArm;
-    Servo leftArm;
+   // Servo leftArm;
+    Servo linearServo;
 
+    //Test variable used for current model
+    //Will be deleted soon
     final int WHITE_ALPHA = 150;
 
+    //Booleans used for while loops
     boolean kicked = false;
-    /* Declare OpMode members. */
+    boolean notLowered = false;
 
     DcMotor frontLeft;
     DcMotor frontRight;
     DcMotor backLeft;
     DcMotor backRight;
+    DcMotor linearMotor;
 
-    static final double     COUNTS_PER_MOTOR_REV    = 1120 ;
+    //Variables used for encoder calculations
+    static final double     COUNTS_PER_MOTOR_REV    = 1425.2 ;
     static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
@@ -52,15 +61,13 @@ public class Encoders extends LinearOpMode {
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         backLeft = hardwareMap.get(DcMotor.class, "backLeft");
         backRight = hardwareMap.get(DcMotor.class, "backRight");
+        linearMotor = hardwareMap.get(DcMotor.class,  "linearMotor");
 
         frontRight.setDirection(DcMotor.Direction.FORWARD);
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.FORWARD);
-
-        // Send telemetry message to signify robot waiting;
-        telemetry.addData("Status", "Resetting Encoders");    //
-        telemetry.update();
+        linearMotor.setDirection(DcMotor.Direction.REVERSE);
 
         frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -70,65 +77,91 @@ public class Encoders extends LinearOpMode {
         backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         sensorColorRight = hardwareMap.get(ColorSensor.class, "rightColor");
         sensorColorLeft = hardwareMap.get(ColorSensor.class, "leftColor");
         sensorColorMiddle = hardwareMap.get(ColorSensor.class, "middleColor");
-        sensorDistanceL = hardwareMap.get(DistanceSensor.class, "leftColor");
+        //sensorDistanceL = hardwareMap.get(DistanceSensor.class, "leftColor");
         sensorDistanceR = hardwareMap.get(DistanceSensor.class, "rightColor");
-        leftArm = hardwareMap.get(Servo.class, "leftArm");
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
+        //leftArm = hardwareMap.get(Servo.class, "leftArm");
         rightArm = hardwareMap.get(Servo.class, "rightArm");
+        linearServo = hardwareMap.get(Servo.class, "linearServo");
 
+        //Set the range for the linear servo
+        linearServo.scaleRange(0.0, 1.0);
 
-
-        telemetry.addData("Path0",  "Starting at " +
-                frontLeft.getCurrentPosition());
+        telemetry.addData("Status", "Initialized");    //
         telemetry.update();
 
         waitForStart();
 
-        encoderDrive(DRIVE_SPEED,  5,  5, 5.0);
+        while (opModeIsActive()) {
 
-        rightArm.setPosition(0.8);
-        leftArm.setPosition(0.2);
+            //Turns on motor to power lead screw in order to go down
+            linearMotor.setPower(1);
 
-        sleep(2000);
+            //Checks if we have reached the limit of the lead screw, which activates the limit switch
+            //This will insure that we are down on the ground
+            while (notLowered) {
+                if (limitSwitch.isPressed()) {
+                    kicked = true;
+                    linearMotor.setPower(0);
+                    linearServo.setPosition(.2);
 
-        if (!kicked){
-
-            telemetry.addData("Alpha Left", sensorColorLeft.alpha());
-            telemetry.addData("Alpha Middle", sensorColorMiddle.alpha());
-            telemetry.addData("Alpha Right", sensorColorRight.alpha());
-            telemetry.addData("Distance Left", sensorDistanceL.getDistance(DistanceUnit.CM));
-            telemetry.addData("Distance Right", sensorDistanceR.getDistance(DistanceUnit.CM));
-
-            Log.i("Alpha Left", "" + sensorColorLeft.alpha());
-            Log.i("Alpha Middle", "" +sensorColorMiddle.alpha());
-            Log.i("Alpha Right", "" +sensorColorRight.alpha());
-            Log.i("Distance Left", "" +sensorDistanceL.getDistance(DistanceUnit.CM));
-            Log.i("Distance Right", "" +sensorDistanceR.getDistance(DistanceUnit.CM));
-
-            if (sensorColorLeft.alpha() < WHITE_ALPHA){
-                telemetry.addData("Action", "Right Up");
-                rightArm.setPosition(0.2);
-                kicked = true;
-            } else if (sensorColorRight.alpha() < WHITE_ALPHA){
-                telemetry.addData("Action", "Left Up");
-                leftArm.setPosition(0.8);
-                kicked = true;
-            } else if (sensorColorMiddle.alpha() < WHITE_ALPHA){
-                telemetry.addData("Action", "Go Forward");
-                rightArm.setPosition(0);
-                leftArm.setPosition(1);
-                kicked = true;
-            } else{
-                telemetry.addData("Action", "Confused");
+                }
             }
 
-            telemetry.update();
+            //Drives forward 5 inches
+            encoderDrive(DRIVE_SPEED, 5, 5, 5.0);
 
-            sleep(5000);
+            //Positions the arms so that the color sensor is right in front of the minerals
+            rightArm.setPosition(0.8);
+           // leftArm.setPosition(0.2);
+
+            //Insures that the reading is when the arms are on the ground by waiting 2 seconds
+            sleep(2000);
+
+            if (!kicked) {
+
+                //Publishes data on the values that we are reading from both the color and distance sensors
+                telemetry.addData("Alpha Left", sensorColorLeft.alpha());
+                telemetry.addData("Alpha Middle", sensorColorMiddle.alpha());
+                telemetry.addData("Alpha Right", sensorColorRight.alpha());
+               // telemetry.addData("Distance Left", sensorDistanceL.getDistance(DistanceUnit.CM));
+                telemetry.addData("Distance Right", sensorDistanceR.getDistance(DistanceUnit.CM));
+
+                //Puts all of the published data into a log, in order to read later on
+                Log.i("Alpha Left", "" + sensorColorLeft.alpha());
+                Log.i("Alpha Middle", "" + sensorColorMiddle.alpha());
+                Log.i("Alpha Right", "" + sensorColorRight.alpha());
+               // Log.i("Distance Left", "" + sensorDistanceL.getDistance(DistanceUnit.CM));
+                Log.i("Distance Right", "" + sensorDistanceR.getDistance(DistanceUnit.CM));
+
+                //Determines what way to kick, in order to kick the yellow side
+                if (sensorColorLeft.alpha() < WHITE_ALPHA) {
+                    telemetry.addData("Action", "Right Up");
+                    rightArm.setPosition(0.2);
+                    kicked = true;
+                } else if (sensorColorRight.alpha() < WHITE_ALPHA) {
+                    telemetry.addData("Action", "Left Up");
+                   // leftArm.setPosition(0.8);
+                    kicked = true;
+                } else if (sensorColorMiddle.alpha() < WHITE_ALPHA) {
+                    telemetry.addData("Action", "Go Forward");
+                    rightArm.setPosition(0);
+                   // leftArm.setPosition(1);
+                    kicked = true;
+                } else {
+                    telemetry.addData("Action", "Confused");
+                }
+
+                telemetry.update();
+
+                sleep(5000);
+            }
+
         }
-
     }
 
     public void encoderDrive(double speed,
