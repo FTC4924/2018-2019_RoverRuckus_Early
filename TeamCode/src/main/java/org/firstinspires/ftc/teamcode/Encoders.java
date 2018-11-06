@@ -39,6 +39,8 @@ public class Encoders extends LinearOpMode {
     //Booleans used for while loops
     boolean kicked = false;
     boolean notLowered = false;
+    boolean lowered = true;
+
 
     DcMotor frontLeft;
     DcMotor frontRight;
@@ -107,117 +109,118 @@ public class Encoders extends LinearOpMode {
                 if (limitSwitch.isPressed()) {
                     kicked = true;
                     linearMotor.setPower(0);
-                    linearServo.setPosition(.2);
-
+                    linearServo.setPosition(1);
+                    sleep(200);
                 }
             }
+         while (lowered && opModeIsActive()) {
+             //Drives forward 5 inches
+             encoderDrive(DRIVE_SPEED, 5, 5, 5.0);
 
-            //Drives forward 5 inches
-            encoderDrive(DRIVE_SPEED, 5, 5, 5.0);
+             //Positions the arms so that the color sensor is right in front of the minerals
+             rightArm.setPosition(0.8);
+             // leftArm.setPosition(0.2);
 
-            //Positions the arms so that the color sensor is right in front of the minerals
-            rightArm.setPosition(0.8);
-           // leftArm.setPosition(0.2);
+             //Insures that the reading is when the arms are on the ground by waiting 2 seconds
+             sleep(2000);
 
-            //Insures that the reading is when the arms are on the ground by waiting 2 seconds
-            sleep(2000);
+             if (!kicked) {
 
-            if (!kicked) {
+                 //Publishes data on the values that we are reading from both the color and distance sensors
+                 telemetry.addData("Alpha Left", sensorColorLeft.alpha());
+                 telemetry.addData("Alpha Middle", sensorColorMiddle.alpha());
+                 telemetry.addData("Alpha Right", sensorColorRight.alpha());
+                 // telemetry.addData("Distance Left", sensorDistanceL.getDistance(DistanceUnit.CM));
+                 telemetry.addData("Distance Right", sensorDistanceR.getDistance(DistanceUnit.CM));
 
-                //Publishes data on the values that we are reading from both the color and distance sensors
-                telemetry.addData("Alpha Left", sensorColorLeft.alpha());
-                telemetry.addData("Alpha Middle", sensorColorMiddle.alpha());
-                telemetry.addData("Alpha Right", sensorColorRight.alpha());
-               // telemetry.addData("Distance Left", sensorDistanceL.getDistance(DistanceUnit.CM));
-                telemetry.addData("Distance Right", sensorDistanceR.getDistance(DistanceUnit.CM));
+                 //Puts all of the published data into a log, in order to read later on
+                 Log.i("Alpha Left", "" + sensorColorLeft.alpha());
+                 Log.i("Alpha Middle", "" + sensorColorMiddle.alpha());
+                 Log.i("Alpha Right", "" + sensorColorRight.alpha());
+                 // Log.i("Distance Left", "" + sensorDistanceL.getDistance(DistanceUnit.CM));
+                 Log.i("Distance Right", "" + sensorDistanceR.getDistance(DistanceUnit.CM));
 
-                //Puts all of the published data into a log, in order to read later on
-                Log.i("Alpha Left", "" + sensorColorLeft.alpha());
-                Log.i("Alpha Middle", "" + sensorColorMiddle.alpha());
-                Log.i("Alpha Right", "" + sensorColorRight.alpha());
-               // Log.i("Distance Left", "" + sensorDistanceL.getDistance(DistanceUnit.CM));
-                Log.i("Distance Right", "" + sensorDistanceR.getDistance(DistanceUnit.CM));
+                 //Determines what way to kick, in order to kick the yellow side
+                 if (sensorColorLeft.alpha() < WHITE_ALPHA) {
+                     telemetry.addData("Action", "Right Up");
+                     rightArm.setPosition(0.2);
+                     kicked = true;
+                 } else if (sensorColorRight.alpha() < WHITE_ALPHA) {
+                     telemetry.addData("Action", "Left Up");
+                     // leftArm.setPosition(0.8);
+                     kicked = true;
+                 } else if (sensorColorMiddle.alpha() < WHITE_ALPHA) {
+                     telemetry.addData("Action", "Go Forward");
+                     rightArm.setPosition(0);
+                     // leftArm.setPosition(1);
+                     kicked = true;
+                 } else {
+                     telemetry.addData("Action", "Confused");
+                 }
 
-                //Determines what way to kick, in order to kick the yellow side
-                if (sensorColorLeft.alpha() < WHITE_ALPHA) {
-                    telemetry.addData("Action", "Right Up");
-                    rightArm.setPosition(0.2);
-                    kicked = true;
-                } else if (sensorColorRight.alpha() < WHITE_ALPHA) {
-                    telemetry.addData("Action", "Left Up");
-                   // leftArm.setPosition(0.8);
-                    kicked = true;
-                } else if (sensorColorMiddle.alpha() < WHITE_ALPHA) {
-                    telemetry.addData("Action", "Go Forward");
-                    rightArm.setPosition(0);
-                   // leftArm.setPosition(1);
-                    kicked = true;
-                } else {
-                    telemetry.addData("Action", "Confused");
-                }
+                 telemetry.update();
 
-                telemetry.update();
+                 sleep(5000);
+             }
+             public void encoderDrive ( double speed,
+             double leftInches, double rightInches,
+             double timeoutS){
+                 int newLeftTarget;
+                 int newRightTarget;
 
-                sleep(5000);
-            }
+                 // Ensure that the opmode is still active
+                 if (opModeIsActive()) {
 
+                     // Determine new target position, and pass to motor controller
+                     newLeftTarget = frontLeft.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+                     newRightTarget = frontRight.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
+                     frontLeft.setTargetPosition(newLeftTarget);
+                     backLeft.setTargetPosition(newLeftTarget);
+                     frontRight.setTargetPosition(newRightTarget);
+                     backRight.setTargetPosition(newRightTarget);
+
+
+                     // Turn On RUN_TO_POSITION
+                     frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                     backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                     frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                     backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                     // reset the timeout time and start motion.
+                     runtime.reset();
+                     frontRight.setPower(Math.abs(speed));
+                     frontLeft.setPower(Math.abs(speed));
+                     backRight.setPower(Math.abs(speed));
+                     backLeft.setPower(Math.abs(speed));
+
+                     while (opModeIsActive() &&
+                             (runtime.seconds() < timeoutS) &&
+                             (frontLeft.isBusy() && frontRight.isBusy())) {
+
+                         // Display it for the driver.
+                         telemetry.addData("Path1", "Running to " + newLeftTarget + newRightTarget);
+                         telemetry.addData("Path2", "Running at " +
+                                 frontLeft.getCurrentPosition() +
+                                 frontRight.getCurrentPosition());
+                         telemetry.update();
+                     }
+
+                     // Stop all motion;
+                     frontLeft.setPower(0);
+                     frontRight.setPower(0);
+                     backLeft.setPower(0);
+                     backRight.setPower(0);
+
+                     // Turn off RUN_TO_POSITION
+                     frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                     frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                     backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                     backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                 }
+             }
+
+         }
         }
+
     }
 
-    public void encoderDrive(double speed,
-                             double leftInches, double rightInches,
-                             double timeoutS) {
-        int newLeftTarget;
-        int newRightTarget;
-
-        // Ensure that the opmode is still active
-        if (opModeIsActive()) {
-
-            // Determine new target position, and pass to motor controller
-            newLeftTarget = frontLeft.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = frontRight.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            frontLeft.setTargetPosition(newLeftTarget);
-            backLeft.setTargetPosition(newLeftTarget);
-            frontRight.setTargetPosition(newRightTarget);
-            backRight.setTargetPosition(newRightTarget);
-
-
-            // Turn On RUN_TO_POSITION
-            frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            // reset the timeout time and start motion.
-            runtime.reset();
-            frontRight.setPower(Math.abs(speed));
-            frontLeft.setPower(Math.abs(speed));
-            backRight.setPower(Math.abs(speed));
-            backLeft.setPower(Math.abs(speed));
-
-            while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
-                    (frontLeft.isBusy() && frontRight.isBusy())) {
-
-                // Display it for the driver.
-                telemetry.addData("Path1",  "Running to " + newLeftTarget + newRightTarget);
-                telemetry.addData("Path2",  "Running at " +
-                        frontLeft.getCurrentPosition() +
-                        frontRight.getCurrentPosition());
-                telemetry.update();
-            }
-
-            // Stop all motion;
-            frontLeft.setPower(0);
-            frontRight.setPower(0);
-            backLeft.setPower(0);
-            backRight.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-}
