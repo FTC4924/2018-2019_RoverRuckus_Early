@@ -97,6 +97,7 @@ public class CraterCrossing extends LinearOpMode {
     private static final double GYRO_TURN_TOLERANCE_DEGREES = 3;
     boolean landed = false;
     boolean latched = false;
+    boolean kicked = false;
 
 
     /*
@@ -180,6 +181,7 @@ public class CraterCrossing extends LinearOpMode {
 
          while (opModeIsActive()) {
              if (!landed && !latched) {
+                 runtime.reset();
                  linearServo.scaleRange(0.0, 1.0);
                  linearMotor.setTargetPosition(-7122);
                  linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -193,7 +195,7 @@ public class CraterCrossing extends LinearOpMode {
              if (landed && !latched){
                  linearServo.setPosition(1);
                  collectionServo.setPower(1);
-                 sleep(1000);
+                 sleep(1250);
                  collectionServo.setPower(0);
                  latched = true;
                  telemetry.addData("Status:", "Latched");
@@ -229,28 +231,36 @@ public class CraterCrossing extends LinearOpMode {
                                          silverMineral2X = (int) recognition.getLeft();
                                      }
                                  }
-                                 if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
+                                 if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1 && !kicked) {
                                      if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                          telemetry.addData("Gold Mineral Position", "Left");
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
-
                                          turnToPosition(.5, 15);
                                          encoderDrive(DRIVE_SPEED, 10, 10, 5);
+                                         kicked = true;
 
                                      } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                          telemetry.addData("Gold Mineral Position", "Right");
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
-
                                          turnToPosition(.5, -15);
                                          encoderDrive(DRIVE_SPEED, 10, 10, 5);
+                                         kicked = true;
                                      } else {
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
-
                                          telemetry.addData("Gold Mineral Position", "Center");
                                          encoderDrive(DRIVE_SPEED, 10, 10, 5);
-
+                                         kicked = true;
                                      }
                                  }
+                             } else if (runtime.seconds() >= 15 && !kicked){
+                                 //It has been 20 seconds and we cannot identify the gold
+                                 //Assume middle
+                                 encoderDrive(DRIVE_SPEED, 2, 2, 5);
+                                 telemetry.addData("Gold Mineral Position", "Unknown");
+                                 encoderDrive(DRIVE_SPEED, 10, 10, 5);
+                                 encoderDrive(.5,5,5,5);
+                                 kicked = true;
+
                              }
                              telemetry.update();
                          }

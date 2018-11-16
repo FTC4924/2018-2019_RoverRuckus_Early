@@ -49,7 +49,7 @@ public class RoverHolonomic extends OpMode {
         linearServo = hardwareMap.get(Servo.class, "linearServo");
         armServo = hardwareMap.get(CRServo.class, "armServo");
         tape = hardwareMap.get(CRServo.class, "tapeMeasure");
-        rightArm = hardwareMap.get(Servo.class, "rightArm");
+        //rightArm = hardwareMap.get(Servo.class, "rightArm");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery

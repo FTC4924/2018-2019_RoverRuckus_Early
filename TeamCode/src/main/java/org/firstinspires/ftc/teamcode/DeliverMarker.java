@@ -80,6 +80,8 @@ public class DeliverMarker extends LinearOpMode {
     TouchSensor limitSwitch;
     Servo linearServo;
     CRServo collectionServo;
+    CRServo marker;
+    CRServo tape;
 
 
     static final double     COUNTS_PER_MOTOR_REV    = 1425.2 ;
@@ -97,7 +99,7 @@ public class DeliverMarker extends LinearOpMode {
     private static final double GYRO_TURN_TOLERANCE_DEGREES = 3;
     boolean landed = false;
     boolean latched = false;
-
+    boolean kicked = false;
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -132,6 +134,8 @@ public class DeliverMarker extends LinearOpMode {
         limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
         linearServo = hardwareMap.get(Servo.class, "linearServo");
         collectionServo = hardwareMap.get(CRServo.class, "collectionServo");
+        marker = hardwareMap.get(CRServo.class, "markerServo");
+        tape = hardwareMap.get(CRServo.class, "tapeMeasure");
 
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
@@ -178,8 +182,10 @@ public class DeliverMarker extends LinearOpMode {
         telemetry.addData("Status:", "Starting");
         telemetry.update();
 
+
         while (opModeIsActive()) {
             if (!landed && !latched) {
+                runtime.reset();
                 linearServo.scaleRange(0.0, 1.0);
                 linearMotor.setTargetPosition(-7122);
                 linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -193,7 +199,7 @@ public class DeliverMarker extends LinearOpMode {
             if (landed && !latched){
                 linearServo.setPosition(1);
                 collectionServo.setPower(1);
-                sleep(1000);
+                sleep(1250);
                 collectionServo.setPower(0);
                 latched = true;
                 telemetry.addData("Status:", "Latched");
@@ -229,28 +235,59 @@ public class DeliverMarker extends LinearOpMode {
                                         silverMineral2X = (int) recognition.getLeft();
                                     }
                                 }
-                                if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
+                                if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1 && !kicked) {
                                     if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                         telemetry.addData("Gold Mineral Position", "Left");
                                         encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                         turnToPosition(.5, 15);
                                         encoderDrive(DRIVE_SPEED, 12, 12, 5);
                                         turnToPosition(.5, -15);
+                                        kicked = true;
 
                                     } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                         telemetry.addData("Gold Mineral Position", "Right");
                                         encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                         turnToPosition(.5, -15);
                                         encoderDrive(DRIVE_SPEED, 12, 12, 5);
-                                        turnToPosition(.5, -15);
+                                        turnToPosition(.5, 15);
+                                        kicked = true;
                                     } else {
                                         encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                         telemetry.addData("Gold Mineral Position", "Center");
                                         encoderDrive(DRIVE_SPEED, 10, 10, 5);
-
+                                        kicked = true;
                                     }
                                     encoderDrive(.5,5,5,5);
+
+                                    marker.setPower(0.3);
+                                    sleep(2000);
+                                    marker.setPower(0);
+                                    sleep(500);
+                                    marker.setPower(-0.3);
+                                    turnToPosition(0.5,40);
+                                    tape.setPower(1);
+                                    sleep(2000);
+                                    marker.setPower(0);
+                                    sleep(5000);
                                 }
+                            } else if (runtime.seconds() >= 10 && !kicked){
+                                //It has been 20 seconds and we cannot identify the gold
+                                //Assume middle
+                                encoderDrive(DRIVE_SPEED, 2, 2, 5);
+                                telemetry.addData("Gold Mineral Position", "Unknown");
+                                encoderDrive(DRIVE_SPEED, 10, 10, 5);
+                                encoderDrive(.5,5,5,5);
+                                marker.setPower(0.3);
+                                sleep(2000);
+                                marker.setPower(0);
+                                sleep(500);
+                                marker.setPower(-0.3);
+                                turnToPosition(0.5,45);
+                                tape.setPower(1);
+                                sleep(2000);
+                                marker.setPower(0);
+                                sleep(5000);
+                                kicked = true;
                             }
                             telemetry.update();
                         }
