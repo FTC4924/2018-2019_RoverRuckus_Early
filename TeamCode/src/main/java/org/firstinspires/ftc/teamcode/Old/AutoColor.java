@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Old;
 
 import android.util.Log;
 
@@ -15,8 +15,9 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+
 @Autonomous(name="Arm Test", group="Linear Opmode")
-public class AutoColor extends LinearOpMode {
+@Disabled public class AutoColor extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -88,4 +89,5 @@ public class AutoColor extends LinearOpMode {
 
             }
     }
+
 }

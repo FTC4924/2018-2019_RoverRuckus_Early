@@ -22,6 +22,9 @@ public class RoverHolonomic extends OpMode {
     private DcMotor linearMotor = null;
     private Servo linearServo = null;
     private CRServo collectionServo = null;
+    private CRServo armServo = null;
+    private CRServo tape = null;
+    private Servo rightArm = null;
     double clawClosePosition = 0.5;
     /*
 
@@ -44,6 +47,9 @@ public class RoverHolonomic extends OpMode {
         linearMotor = hardwareMap.get(DcMotor.class, "linearMotor");
         collectionServo = hardwareMap.get(CRServo.class, "collectionServo");
         linearServo = hardwareMap.get(Servo.class, "linearServo");
+        armServo = hardwareMap.get(CRServo.class, "armServo");
+        tape = hardwareMap.get(CRServo.class, "tapeMeasure");
+        //rightArm = hardwareMap.get(Servo.class, "rightArm");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -53,6 +59,10 @@ public class RoverHolonomic extends OpMode {
         backRightMotor.setDirection(DcMotor.Direction.REVERSE);
         collection.setDirection(DcMotor.Direction.FORWARD);
         linearMotor.setDirection(DcMotor.Direction.FORWARD);
+
+        linearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -114,15 +124,23 @@ public class RoverHolonomic extends OpMode {
         boolean collectionPowerDown = gamepad2.a;
         //collectionPowerDown is dependent on whether or not we want the collection deliver (Push downwards)
 
-        double leadScrew =  (gamepad2.left_stick_y);
+        double leadScrew =  0.5 * (gamepad2.left_stick_y);
 
-        boolean hookMovementLeft = gamepad2.dpad_left;
-        boolean hookMovementRight = gamepad2.dpad_right;
+        double tapeMeasure = -0.5 * (gamepad2.right_stick_y);
 
         boolean collectionUp = gamepad2.y;
         boolean collectionDown = gamepad2.x;
 
         boolean halfSpeed = gamepad1.left_bumper;
+
+        if (gamepad2.dpad_up) {
+            //if we want it to collect, we set collectionPower to 1
+            leadScrew = 0.5;
+
+        } else if (gamepad2.dpad_down) {
+            //if we want the collection to deliver/spin backswards, we set collectionPower to -1
+            leadScrew = -0.5;
+        }
 
         if (collectionPowerUp) {
             //if we want it to collect, we set collectionPower to 1
@@ -132,21 +150,37 @@ public class RoverHolonomic extends OpMode {
             collectionPower = -1;
         }
 
-        if (hookMovementLeft) {
+        if (gamepad2.left_bumper) {
             //if we want it to collect, we set collectionPower to 1
-            linearServo.setPosition(0.1);
+            linearServo.setPosition(0);
 
-        } else if (hookMovementRight) {
+        } else if (gamepad2.right_bumper) {
             //if we want the collection to deliver/spin backswards, we set collectionPower to -1
-            linearServo.setPosition(0.9);
+            linearServo.setPosition(1);
+        }
+
+        if (gamepad1.a ) {
+            //if we want it to collect, we set collectionPower to 1
+            armServo.setPower(-0.6);
+        } else if (gamepad1.b) {
+            //if we want the collection to deliver/spin backswards, we set collectionPower to -1
+            armServo.setPower(0.6);
+        } else{
+            armServo.setPower(0);
         }
 
         if (collectionUp ) {
-            //if we want it to collect, we set collectionPower to 1
-            extendCollection = 1;
+            //if we want it to c    ollect, we set collectionPower to 1
+            extendCollection =  1;
         } else if (collectionDown) {
             //if we want the collection to deliver/spin backswards, we set collectionPower to -1
             extendCollection = -1;
+        }
+
+        if (gamepad1.x){
+            rightArm.setPosition(0.3);
+        } else if(gamepad1.y){
+            rightArm.setPosition(0.7);
         }
 
        /* if (gamepad2.left_bumper) {
@@ -193,12 +227,14 @@ public class RoverHolonomic extends OpMode {
         collection.setPower(collectionPower);
         linearMotor.setPower(leadScrew);
         collectionServo.setPower(extendCollection);
+        tape.setPower(tapeMeasure);
 
         // Show the elapsed game time
         // telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Slow Mode", halfSpeed);
+
         telemetry.addData("Elbow Servo", "Continous Position" + position);
-        telemetry.addData("Claw Servo", "Continous Position" + clawPosition);
+        telemetry.addData("Lead Screw Motor", linearMotor.getCurrentPosition());
 
         turnLeft = 0;
         turnRight = 0;

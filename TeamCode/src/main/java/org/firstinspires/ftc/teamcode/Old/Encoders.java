@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Old;
 
 import android.util.Log;
 
@@ -17,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 @Autonomous(name="Encoder", group="Pushbot")
-
+@Disabled
 public class Encoders extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
