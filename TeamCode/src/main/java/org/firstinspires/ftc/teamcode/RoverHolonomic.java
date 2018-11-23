@@ -25,6 +25,7 @@ public class RoverHolonomic extends OpMode {
     private CRServo armServo = null;
     private CRServo tape = null;
     private Servo rightArm = null;
+    private CRServo marker = null;
     double clawClosePosition = 0.5;
     /*
 
@@ -49,6 +50,7 @@ public class RoverHolonomic extends OpMode {
         linearServo = hardwareMap.get(Servo.class, "linearServo");
         armServo = hardwareMap.get(CRServo.class, "armServo");
         tape = hardwareMap.get(CRServo.class, "tapeMeasure");
+        marker = hardwareMap.get(CRServo.class,"markerServo");
         //rightArm = hardwareMap.get(Servo.class, "rightArm");
 
         // Most robots need the motor on one side to be reversed to drive forward
@@ -152,11 +154,11 @@ public class RoverHolonomic extends OpMode {
 
         if (gamepad2.left_bumper) {
             //if we want it to collect, we set collectionPower to 1
-            linearServo.setPosition(0);
+            linearServo.setPosition(0.3);
 
         } else if (gamepad2.right_bumper) {
             //if we want the collection to deliver/spin backswards, we set collectionPower to -1
-            linearServo.setPosition(1);
+            linearServo.setPosition(0.7);
         }
 
         if (gamepad1.a ) {
@@ -167,6 +169,14 @@ public class RoverHolonomic extends OpMode {
             armServo.setPower(0.6);
         } else{
             armServo.setPower(0);
+        }
+
+        if (gamepad1.dpad_up){
+            marker.setPower(-0.5);
+        } else if (gamepad1.dpad_down){
+            marker.setPower(0.5);
+        } else{
+            marker.setPower(0);
         }
 
         if (collectionUp ) {

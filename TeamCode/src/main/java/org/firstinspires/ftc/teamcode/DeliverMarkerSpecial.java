@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -41,15 +43,11 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
-import org.firstinspires.ftc.robotcore.external.tfod.*;
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-
-
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
 
@@ -65,9 +63,9 @@ import java.util.List;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name = "Marker Starting", group = "4924")
+@Autonomous(name = "Marker Starting with 11112", group = "4924")
 
-public class DeliverMarker extends LinearOpMode {
+public class DeliverMarkerSpecial extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -271,9 +269,7 @@ public class DeliverMarker extends LinearOpMode {
                                     marker.setPower(-0.5);
                                     tape.setPower(1);
                                     if (goldPosition != 0) {
-                                        turnToPosition(0.5, 33);
-                                    } else{
-                                        turnToPosition(0.5,-35);
+                                        turnToPosition(0.5, -25);
                                     }
                                     sleep(1700);
                                     marker.setPower(0);
@@ -296,7 +292,7 @@ public class DeliverMarker extends LinearOpMode {
                                 tape.setPower(1);
                                 telemetry.addData("Turn","started");
                                 telemetry.update();
-                                turnToPosition(0.5,45);
+                                turnToPosition(0.5,-25);
                                 telemetry.addData("Turn","ended");
                                 telemetry.update();
                                 sleep(1700);
