@@ -233,33 +233,33 @@ public class CraterCrossing extends LinearOpMode {
                                  }
                                  if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1 && !kicked) {
                                      if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
+                                         kicked = true;
                                          telemetry.addData("Gold Mineral Position", "Left");
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
-                                         turnToPosition(.5, 15);
-                                         encoderDrive(DRIVE_SPEED, 10, 10, 5);
-                                         kicked = true;
+                                         turnToPosition(.5, 25);
+                                         encoderDrive(DRIVE_SPEED, 13, 13, 7);
 
                                      } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                         telemetry.addData("Gold Mineral Position", "Right");
-                                         encoderDrive(DRIVE_SPEED, 2, 2, 5);
-                                         turnToPosition(.5, -15);
-                                         encoderDrive(DRIVE_SPEED, 10, 10, 5);
                                          kicked = true;
+                                         telemetry.addData("Gold Mineral Position", "Right");
+                                         encoderDrive(DRIVE_SPEED, 2, 2, 7);
+                                         turnToPosition(.5, -25);
+                                         encoderDrive(DRIVE_SPEED, 13, 13, 7);
                                      } else {
+                                         kicked = true;
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                          telemetry.addData("Gold Mineral Position", "Center");
-                                         encoderDrive(DRIVE_SPEED, 10, 10, 5);
-                                         kicked = true;
+                                         encoderDrive(DRIVE_SPEED, 10, 10, 7);
                                      }
                                  }
                              } else if (runtime.seconds() >= 15 && !kicked){
                                  //It has been 20 seconds and we cannot identify the gold
                                  //Assume middle
+                                 kicked = true;
                                  encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                  telemetry.addData("Gold Mineral Position", "Unknown");
                                  encoderDrive(DRIVE_SPEED, 10, 10, 5);
                                  encoderDrive(.5,5,5,5);
-                                 kicked = true;
 
                              }
                              telemetry.update();

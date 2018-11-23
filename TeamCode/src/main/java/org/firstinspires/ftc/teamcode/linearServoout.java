@@ -18,6 +18,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="linearServoout", group="Linear Opmode")
+@Disabled
 public class linearServoout extends LinearOpMode {
 
     // Declare OpMode members.
