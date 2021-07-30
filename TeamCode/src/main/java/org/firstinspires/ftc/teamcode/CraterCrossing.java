@@ -218,6 +218,8 @@ public class CraterCrossing extends LinearOpMode {
                          List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                          if (updatedRecognitions != null) {
                              telemetry.addData("# Object Detected", updatedRecognitions.size());
+                             telemetry.update();
+
                              if (updatedRecognitions.size() == 3) {
                                  int goldMineralX = -1;
                                  int silverMineral1X = -1;
@@ -235,6 +237,8 @@ public class CraterCrossing extends LinearOpMode {
                                      if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                          kicked = true;
                                          telemetry.addData("Gold Mineral Position", "Left");
+                                         telemetry.update();
+
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                          turnToPosition(.5, 25);
                                          encoderDrive(DRIVE_SPEED, 13, 13, 7);
@@ -242,6 +246,8 @@ public class CraterCrossing extends LinearOpMode {
                                      } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                          kicked = true;
                                          telemetry.addData("Gold Mineral Position", "Right");
+                                         telemetry.update();
+
                                          encoderDrive(DRIVE_SPEED, 2, 2, 7);
                                          turnToPosition(.5, -25);
                                          encoderDrive(DRIVE_SPEED, 13, 13, 7);
@@ -249,6 +255,8 @@ public class CraterCrossing extends LinearOpMode {
                                          kicked = true;
                                          encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                          telemetry.addData("Gold Mineral Position", "Center");
+                                         telemetry.update();
+
                                          encoderDrive(DRIVE_SPEED, 10, 10, 7);
                                      }
                                  }
@@ -258,11 +266,12 @@ public class CraterCrossing extends LinearOpMode {
                                  kicked = true;
                                  encoderDrive(DRIVE_SPEED, 2, 2, 5);
                                  telemetry.addData("Gold Mineral Position", "Unknown");
+                                 telemetry.update();
+
                                  encoderDrive(DRIVE_SPEED, 10, 10, 5);
                                  encoderDrive(.5,5,5,5);
 
                              }
-                             telemetry.update();
                          }
                      }
                  }
@@ -335,15 +344,6 @@ public class CraterCrossing extends LinearOpMode {
             while (opModeIsActive() &&
                     (runtime.seconds() < timeoutS) &&
                     (frontLeft.isBusy() && frontRight.isBusy())) {
-
-                // Display it for the driver.
-                telemetry.addData("Path1",  "Running to " + newLeftTarget + newRightTarget);
-                telemetry.addData("Path2",  "Running at " +
-                        frontLeft.getCurrentPosition() +
-                        frontRight.getCurrentPosition());
-                telemetry.addData("driving",leftInches);
-
-                telemetry.update();
             }
 
             // Stop all motion;
@@ -372,13 +372,9 @@ public class CraterCrossing extends LinearOpMode {
         setMotorsModes(DcMotor.RunMode.RUN_WITHOUT_ENCODER, DRIVE_BASE_MOTORS);
 
         while (getHeading() - desiredHeading > GYRO_TURN_TOLERANCE_DEGREES && opModeIsActive()) {
-            telemetry.addData("Heading", getHeading());
-            telemetry.update();
             turn(turnPower);
         }
         while (getHeading() - desiredHeading < -GYRO_TURN_TOLERANCE_DEGREES && opModeIsActive()) {
-            telemetry.addData("Heading", getHeading());
-            telemetry.update();
             turn(-turnPower);
         }
         setMotorsPowers(0, DRIVE_BASE_MOTORS);
@@ -387,8 +383,6 @@ public class CraterCrossing extends LinearOpMode {
 
     public double getHeading() {
         updateGyro();
-        telemetry.addData("getHeading",angles.firstAngle);
-        telemetry.update();
         return angles.firstAngle;
     }
 
